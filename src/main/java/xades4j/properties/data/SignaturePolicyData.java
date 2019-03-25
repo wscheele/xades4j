@@ -16,10 +16,10 @@
  */
 package xades4j.properties.data;
 
+import org.apache.xml.security.transforms.Transforms;
 import xades4j.properties.ObjectIdentifier;
 
 /**
- *
  * @author Luís
  */
 public final class SignaturePolicyData implements PropertyDataObject
@@ -28,22 +28,25 @@ public final class SignaturePolicyData implements PropertyDataObject
     private final String digestAlgorithm;
     private final byte[] digestValue;
     private final String locationUrl;
+    private Transforms transforms = null;
 
     public SignaturePolicyData(
             ObjectIdentifier identifier,
             String digestAlgorithm,
             byte[] digestValue,
-            String locationUrl)
+            String locationUrl,
+            Transforms transforms)
     {
         this.identifier = identifier;
         this.digestAlgorithm = digestAlgorithm;
         this.digestValue = digestValue;
         this.locationUrl = locationUrl;
+        this.transforms = transforms;
     }
 
     public SignaturePolicyData()
     {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
     public String getDigestAlgorithm()
@@ -64,5 +67,10 @@ public final class SignaturePolicyData implements PropertyDataObject
     public String getLocationUrl()
     {
         return locationUrl;
+    }
+
+    public Transforms getTransforms()
+    {
+        return transforms;
     }
 }

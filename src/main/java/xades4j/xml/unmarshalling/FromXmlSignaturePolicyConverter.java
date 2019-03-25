@@ -16,19 +16,15 @@
  */
 package xades4j.xml.unmarshalling;
 
-import java.util.List;
-import javax.xml.bind.JAXBElement;
 import xades4j.properties.QualifyingProperty;
 import xades4j.properties.SignaturePolicyBase;
 import xades4j.properties.data.SignaturePolicyData;
-import xades4j.xml.bind.xades.XmlAnyType;
-import xades4j.xml.bind.xades.XmlSigPolicyQualifiersListType;
-import xades4j.xml.bind.xades.XmlSignaturePolicyIdType;
-import xades4j.xml.bind.xades.XmlSignaturePolicyIdentifierType;
-import xades4j.xml.bind.xades.XmlSignedSignaturePropertiesType;
+import xades4j.xml.bind.xades.*;
+
+import javax.xml.bind.JAXBElement;
+import java.util.List;
 
 /**
- *
  * @author Luís
  */
 class FromXmlSignaturePolicyConverter implements SignedSigPropFromXmlConv
@@ -58,31 +54,31 @@ class FromXmlSignaturePolicyConverter implements SignedSigPropFromXmlConv
                 FromXmlUtils.getObjectIdentifier(xmlPolicyId.getSigPolicyId()),
                 xmlPolicyId.getSigPolicyHash().getDigestMethod().getAlgorithm(),
                 xmlPolicyId.getSigPolicyHash().getDigestValue(),
-                getLocationUrl(xmlPolicyId)));
+                getLocationUrl(xmlPolicyId), null));
     }
 
     private static String getLocationUrl(XmlSignaturePolicyIdType xmlPolicyId) throws PropertyUnmarshalException
     {
         XmlSigPolicyQualifiersListType sigPolicyQualifiers = xmlPolicyId.getSigPolicyQualifiers();
-        if(null == sigPolicyQualifiers)
+        if (null == sigPolicyQualifiers)
         {
             return null;
         }
-        
+
         List<XmlAnyType> xmlQualifiers = sigPolicyQualifiers.getSigPolicyQualifier();
         for (XmlAnyType xmlQualifier : xmlQualifiers)
         {
             List content = xmlQualifier.getContent();
             if (content.size() == 1 && content.get(0) instanceof JAXBElement)
             {
-                JAXBElement xmlSPURI = (JAXBElement)content.get(0);
+                JAXBElement xmlSPURI = (JAXBElement) content.get(0);
                 if (xmlSPURI.getName().getLocalPart().equals("SPURI") && xmlSPURI.getName().getNamespaceURI().equals(QualifyingProperty.XADES_XMLNS))
                 {
-                    return (String)xmlSPURI.getValue();
+                    return (String) xmlSPURI.getValue();
                 }
             }
         }
-        
+
         return null;
     }
 }

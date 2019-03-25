@@ -16,13 +16,18 @@
  */
 package xades4j.properties;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import xades4j.algorithms.Algorithm;
+import xades4j.utils.CollectionUtils;
+import xades4j.utils.StreamUtils;
+
+import java.io.*;
+import java.util.Collection;
 
 /**
  * An explicit and unambiguous identifier of a signature policy.
- * @see SignaturePolicyBase
+ *
  * @author Luís
+ * @see SignaturePolicyBase
  */
 public final class SignaturePolicyIdentifierProperty extends SignaturePolicyBase
 {
@@ -30,9 +35,10 @@ public final class SignaturePolicyIdentifierProperty extends SignaturePolicyBase
     private byte[] policyDocumentData;
     private InputStream policyDocumentStream;
     private String locationUrl;
+    private Collection<Algorithm> transforms;
 
     /**
-     * @param identifier the policy identifier
+     * @param identifier           the policy identifier
      * @param policyDocumentStream an {@code InputStream} to the policy document
      * @throws NullPointerException if {@code policyDocumentStream} is {@code null}
      */
@@ -48,7 +54,7 @@ public final class SignaturePolicyIdentifierProperty extends SignaturePolicyBase
     }
 
     /**
-     * @param identifier the policy identifier
+     * @param identifier         the policy identifier
      * @param policyDocumentData the content of the policy document
      * @throws NullPointerException if {@code policyDocumentData} is {@code null}
      */
@@ -64,17 +70,61 @@ public final class SignaturePolicyIdentifierProperty extends SignaturePolicyBase
     }
 
     /**
+     * Registers a transform to be applied to the SignaturePolicyId.
+     * Each transform will result in a {@code ds:Transform} element
+     * within the {@code xades:SignaturePolicyId}.
+     *
+     * @param transf the transform to be applied
+     * @return the current instance
+     * @throws NullPointerException  if {@code transf} is {@code null}
+     * @throws IllegalStateException if the transform (instance) is already
+     *                               present
+     */
+    public final SignaturePolicyIdentifierProperty withTransform(Algorithm transf)
+    {
+        if (null == transf)
+            throw new NullPointerException("Transform cannot be null");
+
+        transforms = CollectionUtils.newIfNull(transforms, 2);
+        if (!transforms.add(transf))
+            throw new IllegalStateException("Transform was already added");
+
+        return this;
+    }
+
+    public Collection<Algorithm> getTransforms()
+    {
+        return CollectionUtils.emptyIfNull(transforms);
+    }
+
+    /**
      * Gets the content of the policy document
-     * @return the content or {@code null} if the instance was created with a stream
+     *
+     * @return the content
      */
     public byte[] getPolicyDocumentData()
     {
+        if (policyDocumentData == null)
+        {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            BufferedInputStream inputStream = new BufferedInputStream(getPolicyDocumentStream());
+            try
+            {
+                StreamUtils.readWrite(inputStream, bos);
+                bos.flush();
+                return bos.toByteArray();
+            } catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
         return policyDocumentData;
     }
 
     /**
      * Gets the stream to the policy document. If the instance was created with
      * the policy document content, a ByteArrayInputStream is returned.
+     *
      * @return the stream
      */
     public InputStream getPolicyDocumentStream()
@@ -88,10 +138,11 @@ public final class SignaturePolicyIdentifierProperty extends SignaturePolicyBase
     {
         return identifier;
     }
-    
+
     /**
      * Adds a URL where a copy of the signature policy may be obtained. This will
      * be added as a qualifier.
+     *
      * @param url the location URL
      * @return the current instance
      */
@@ -100,7 +151,7 @@ public final class SignaturePolicyIdentifierProperty extends SignaturePolicyBase
         locationUrl = url;
         return this;
     }
-    
+
     public String getLocationUrl()
     {
         return locationUrl;
